@@ -327,6 +327,14 @@ export default defineComponent({
             window.open(marcador.url, '_blank');
           }
           break;
+
+        case 'cambiar_escena':
+          if (marcador.escenaDestino) {
+            panelVisible.value = false;
+            marcadorSeleccionadoId.value = null;
+            cargarEscena(marcador.escenaDestino);
+          }
+          break;
       }
     };
 

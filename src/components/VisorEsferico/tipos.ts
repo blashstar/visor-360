@@ -34,7 +34,8 @@ export type PosicionMarcador = CoordenadaTextura | CoordenadaEsferica;
 export type AccionMarcador =
   | 'mostrar_panel'
   | 'cambiar_contenido'
-  | 'navegar';
+  | 'navegar'
+  | 'cambiar_escena';
 
 /**
  * Tipo de medio soportado por el visor.
@@ -95,6 +96,8 @@ export interface Marcador {
   url?: string;
   /** Tipo de medio al que apunta (solo para acción 'cambiar_contenido'). */
   tipoMedio?: TipoMedio;
+  /** ID de la escena destino (solo para acción 'cambiar_escena'). */
+  escenaDestino?: string;
   /** Datos adicionales para el panel (opcional). */
   datosPanel?: Record<string, unknown>;
   /** Estilo personalizado del marcador (opcional). */
@@ -225,6 +228,12 @@ export interface ConfiguracionVideo {
 export interface Escena {
   /** Identificador único de la escena. */
   id: string;
+  /** Título descriptivo de la escena. */
+  titulo?: string;
+  /** Descripción de la escena. */
+  descripcion?: string;
+  /** URL de la imagen de vista previa (thumbnail). */
+  previo?: string;
   /** URL del medio (imagen o vídeo). */
   medio: string;
   /** Tipo de medio (default: 'imagen'). */

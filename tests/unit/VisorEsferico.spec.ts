@@ -30,19 +30,32 @@ describe('VisorEsferico', () => {
       url: 'https://ejemplo.com',
       accion: 'navegar',
     },
+    {
+      id: '4',
+      posicion: { u: 0.8, v: 0.5 },
+      titulo: 'Ir a cocina',
+      escenaDestino: 'cocina',
+      accion: 'cambiar_escena',
+    },
   ];
 
   const escenasMock: Escena[] = [
     {
       id: 'sala',
+      titulo: 'Sala de estar',
+      descripcion: 'Una acogedora sala con vista panorámica',
+      previo: '/ejemplos/sala_previo.jpg',
       medio: imagenMock,
       tipoMedio: 'imagen',
-      marcadores: [marcadoresMock[0]],
+      marcadores: [marcadoresMock[0], marcadoresMock[3]],
       posicionInicial: { yaw: 0, pitch: 0 },
       zoomInicial: 50,
     },
     {
       id: 'cocina',
+      titulo: 'Cocina moderna',
+      descripcion: 'Cocina equipada con electrodomésticos de última generación',
+      previo: '/ejemplos/cocina_previo.jpg',
       medio: imagenMock,
       tipoMedio: 'imagen',
       marcadores: [marcadoresMock[1]],
@@ -51,6 +64,8 @@ describe('VisorEsferico', () => {
     },
     {
       id: 'video',
+      titulo: 'Recorrido virtual',
+      descripcion: 'Video panorámico del recorrido completo',
       medio: videoMock,
       tipoMedio: 'video',
       marcadores: [marcadoresMock[2]],
@@ -178,6 +193,40 @@ describe('VisorEsferico', () => {
 
     expect(windowSpy).toHaveBeenCalledWith('https://ejemplo.com', '_blank');
     windowSpy.mockRestore();
+  });
+
+  it('debe cambiar de escena al seleccionar un marcador con acción "cambiar_escena"', async () => {
+    const wrapper = mount(VisorEsferico, {
+      props: {
+        escenas: escenasMock,
+        escenaInicial: 'sala',
+      },
+    });
+
+    expect(wrapper.vm.obtenerEscenaActual()?.id).toBe('sala');
+
+    await wrapper.findComponent({ name: 'Esfera360' }).vm.$emit('marcador-seleccionado', {
+      marcador: marcadoresMock[3],
+    });
+
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.emitted('escena-cambiada')).toBeTruthy();
+    expect(wrapper.vm.obtenerEscenaActual()?.id).toBe('cocina');
+  });
+
+  it('debe incluir titulo, descripcion y previo en la escena actual', () => {
+    const wrapper = mount(VisorEsferico, {
+      props: {
+        escenas: escenasMock,
+        escenaInicial: 'sala',
+      },
+    });
+
+    const escena = wrapper.vm.obtenerEscenaActual();
+    expect(escena?.titulo).toBe('Sala de estar');
+    expect(escena?.descripcion).toBe('Una acogedora sala con vista panorámica');
+    expect(escena?.previo).toBe('/ejemplos/sala_previo.jpg');
   });
 
   it('debe exponer API programática via template ref', () => {

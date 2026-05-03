@@ -1,3 +1,4 @@
+import type { ConfiguracionVideo } from '@/components/VisorEsferico/tipos';
 import * as THREE from 'three';
 
 /**
@@ -31,13 +32,16 @@ export const cargarTexturaImagen = (url: string): Promise<THREE.Texture> => {
  */
 export const cargarTexturaVideo = (
   url: string,
-  autoReproducir: boolean = true
+  autoReproducir: boolean = true,
+  config?: ConfiguracionVideo
 ): Promise<THREE.VideoTexture> => {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
     video.src = url;
-    video.loop = true;
-    video.muted = true;
+    video.loop = config?.bucle ?? true;
+    video.muted = config?.muteadoInicial ?? true;
+    video.volume = Math.max(0, Math.min(1, config?.volumenInicial ?? 1));
+    video.currentTime = Math.max(0, config?.tiempoInicial ?? 0);
     video.playsInline = true;
     video.setAttribute('webkit-playsinline', 'true');
     video.crossOrigin = 'anonymous';

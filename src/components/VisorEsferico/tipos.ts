@@ -204,6 +204,22 @@ export interface EventosVisorEsferico {
 }
 
 /**
+ * Configuración específica para medios de tipo video dentro de una escena.
+ */
+export interface ConfiguracionVideo {
+  /** Si los controles de video son visibles (default: true). */
+  controlesVisibles?: boolean;
+  /** Volumen inicial del video, 0-1 (default: 1). */
+  volumenInicial?: number;
+  /** Si el video inicia muteado (default: true). */
+  muteadoInicial?: boolean;
+  /** Tiempo inicial del video en segundos (default: 0). */
+  tiempoInicial?: number;
+  /** Si el video se reproduce en bucle (default: true). */
+  bucle?: boolean;
+}
+
+/**
  * Define una escena completa del visor: medio + marcadores + configuración de cámara.
  */
 export interface Escena {
@@ -219,6 +235,8 @@ export interface Escena {
   posicionInicial?: CoordenadaEsferica;
   /** Zoom inicial para esta escena (0-100, default: 50). */
   zoomInicial?: number;
+  /** Configuración específica para video (solo aplica cuando tipoMedio es 'video'). */
+  configuracionVideo?: ConfiguracionVideo;
 }
 
 /**

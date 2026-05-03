@@ -20,7 +20,7 @@ import { crearMarcador3D, posicionACartesiano, esfericaATextura } from '@/utils/
 import { normalizarYaw, diferenciaAngular, animarValores, matarAnimaciones, EasingVisor } from '@/utils/animaciones';
 import { configurarControlesTactiles } from './ControlesTactiles';
 import MarcadorVue from './Marcador.vue';
-import type { Marcador, TipoMedio, PosicionPantalla, CoordenadaEsferica, EstadoCamara } from './tipos';
+import type { Marcador, TipoMedio, PosicionPantalla, CoordenadaEsferica, EstadoCamara, ConfiguracionVideo } from './tipos';
 
 export default defineComponent({
   name: 'Esfera360',
@@ -38,6 +38,7 @@ export default defineComponent({
     sensibilidadZoom: { type: Number, default: 1 },
     posicionInicial: { type: Object as PropType<CoordenadaEsferica>, default: () => ({ yaw: 0, pitch: 0 }) },
     zoomInicial: { type: Number, default: 50 },
+    configuracionVideo: { type: Object as PropType<ConfiguracionVideo>, default: () => ({}) },
   },
   emits: ['marcador-seleccionado', 'marcador-hover', 'actualizar-posiciones', 'video-pausado', 'video-reanudado', 'estado-cambiado', 'estado-video'],
   setup(props, { emit, expose }) {
@@ -220,7 +221,7 @@ export default defineComponent({
 
       try {
         if (props.tipoMedio === 'video') {
-          texturaActual = await cargarTexturaVideo(props.medio, props.autoReproducir);
+          texturaActual = await cargarTexturaVideo(props.medio, props.autoReproducir, props.configuracionVideo);
           elementoVideo = (texturaActual as THREE.VideoTexture).image as HTMLVideoElement;
           configurarListenersVideo();
         } else {

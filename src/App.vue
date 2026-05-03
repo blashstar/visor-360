@@ -126,7 +126,7 @@ export default defineComponent({
         id: 'video2',
         medio: '/ejemplos/video_360_SD.mp4',
         tipoMedio: 'video',
-        posicionInicial: { u: 0, v: 0.5 },
+        posicionInicial: { u: 0, v: 1 },
         zoomInicial: 50,
         marcadores: [
           {

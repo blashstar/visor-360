@@ -14,6 +14,7 @@
     :sensibilidad-zoom="sensibilidadZoom"
     :posicion-inicial="posicionActual"
     :zoom-inicial="zoomActual"
+    :configuracion-video="configuracionVideoActual"
     @marcador-seleccionado="manejarMarcadorSeleccionado"
     @marcador-hover="manejarMarcadorHover"
     @actualizar-posiciones="actualizarPosicionesPantalla"
@@ -21,11 +22,11 @@
     @estado-video="manejarEstadoVideo"
   )
   ControlesVideo.controles-video-anclados(
-    v-if="esVideo"
+    v-if="esVideo && controlesVideoVisibles"
     :reproduciendo="estadoVideo.reproduciendo"
     :tiempo-actual="estadoVideo.tiempoActual"
     :duracion="estadoVideo.duracion"
-    :visible="esVideo"
+    :visible="esVideo && controlesVideoVisibles"
     :muteado="estadoVideo.muteado"
     :volumen="estadoVideo.volumen"
     @play="manejarPlayVideo"
@@ -60,6 +61,7 @@ import type {
   ApiVisorEsferico,
   Escena,
   EventoEscenaCambiada,
+  ConfiguracionVideo,
 } from './tipos';
 
 export default defineComponent({
@@ -218,6 +220,17 @@ export default defineComponent({
     });
 
     const esVideo = computed(() => tipoMedioActual.value === 'video');
+
+    const configuracionVideoActual = computed<ConfiguracionVideo | undefined>(() => {
+      if (modoEscenas.value && escenaActual.value) {
+        return escenaActual.value.configuracionVideo;
+      }
+      return undefined;
+    });
+
+    const controlesVideoVisibles = computed(() => {
+      return configuracionVideoActual.value?.controlesVisibles ?? true;
+    });
 
     const estadoVideo = ref({
       reproduciendo: false,
@@ -486,6 +499,8 @@ export default defineComponent({
       estaMarcadorVisible,
       estiloPanel,
       esVideo,
+      configuracionVideoActual,
+      controlesVideoVisibles,
       estadoVideo,
       actualizarPosicionesPantalla,
       manejarMarcadorSeleccionado,

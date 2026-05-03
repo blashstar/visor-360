@@ -22,6 +22,22 @@
       .indicador-progreso(:style="{ left: porcentajeProgreso + '%' }")
 
   .grupo-derecha
+    .control-audio
+      button.btn-control.btn-mute(
+        @click="$emit('toggle-mute')"
+        :aria-label="muteado ? 'Activar sonido' : 'Silenciar'"
+        type="button"
+      )
+        svg.icono(v-if="muteado || volumen === 0" viewBox="0 0 24 24")
+          path(d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z" fill="currentColor")
+        svg.icono(v-else-if="volumen < 0.5" viewBox="0 0 24 24")
+          path(d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z" fill="currentColor")
+        svg.icono(v-else viewBox="0 0 24 24")
+          path(d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" fill="currentColor")
+
+      .barra-volumen(@click="manejarClickVolumen" ref="barraVolumen")
+        .nivel-volumen(:style="{ width: (muteado ? 0 : volumen * 100) + '%' }")
+
     span.tiempo {{ formatoTiempo(tiempoActual) }} / {{ formatoTiempo(duracion) }}
 </template>
 
@@ -35,8 +51,10 @@ export default defineComponent({
     tiempoActual: { type: Number, default: 0 },
     duracion: { type: Number, default: 0 },
     visible: { type: Boolean, default: false },
+    muteado: { type: Boolean, default: true },
+    volumen: { type: Number, default: 1 },
   },
-  emits: ['play', 'pause', 'seek', 'reiniciar'],
+  emits: ['play', 'pause', 'seek', 'reiniciar', 'toggle-mute', 'cambiar-volumen'],
   setup(props, { emit }) {
     const porcentajeProgreso = computed(() => {
       if (!props.duracion || props.duracion <= 0) return 0;
@@ -59,6 +77,14 @@ export default defineComponent({
       emit('seek', porcentaje * props.duracion);
     };
 
+    const manejarClickVolumen = (e: MouseEvent) => {
+      const barra = e.currentTarget as HTMLElement;
+      const rect = barra.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const nivel = Math.max(0, Math.min(1, x / rect.width));
+      emit('cambiar-volumen', nivel);
+    };
+
     const formatoTiempo = (segundos: number): string => {
       if (!isFinite(segundos) || segundos < 0) return '0:00';
       const mins = Math.floor(segundos / 60);
@@ -70,6 +96,7 @@ export default defineComponent({
       porcentajeProgreso,
       manejarPlayPausa,
       manejarClickBarra,
+      manejarClickVolumen,
       formatoTiempo,
     };
   },
@@ -170,6 +197,32 @@ export default defineComponent({
 
 .barra-tiempo:hover .indicador-progreso
   opacity 1
+
+.control-audio
+  display flex
+  align-items center
+  gap 8px
+  margin-right 12px
+
+.barra-volumen
+  width 60px
+  height 4px
+  background rgba(255, 255, 255, 0.25)
+  border-radius 2px
+  cursor pointer
+  position relative
+
+  &:hover
+    height 6px
+
+.nivel-volumen
+  position absolute
+  top 0
+  left 0
+  height 100%
+  background #4fc3f7
+  border-radius 2px
+  pointer-events none
 
 .tiempo
   color white

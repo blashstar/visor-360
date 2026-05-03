@@ -149,6 +149,8 @@ export interface EstadoVideo {
   reproduciendo: boolean;
   tiempoActual: number;
   duracion: number;
+  muteado: boolean;
+  volumen: number;
 }
 
 /**

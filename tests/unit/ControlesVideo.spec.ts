@@ -119,4 +119,74 @@ describe('ControlesVideo', () => {
     expect(wrapper.emitted('seek')).toBeTruthy();
     expect(wrapper.emitted('seek')?.[0]).toEqual([25]);
   });
+
+  it('debe emitir "toggle-mute" al hacer clic en el botón de mute', () => {
+    const wrapper = mount(ControlesVideo, {
+      props: {
+        visible: true,
+        reproduciendo: true,
+        tiempoActual: 10,
+        duracion: 120,
+        muteado: false,
+        volumen: 0.8,
+      },
+    });
+
+    wrapper.find('button[aria-label="Silenciar"]').trigger('click');
+    expect(wrapper.emitted('toggle-mute')).toBeTruthy();
+  });
+
+  it('debe mostrar icono de muteado cuando está muteado', () => {
+    const wrapper = mount(ControlesVideo, {
+      props: {
+        visible: true,
+        reproduciendo: true,
+        tiempoActual: 10,
+        duracion: 120,
+        muteado: true,
+        volumen: 0.5,
+      },
+    });
+
+    expect(wrapper.find('button[aria-label="Activar sonido"]').exists()).toBe(true);
+  });
+
+  it('debe emitir "cambiar-volumen" al hacer clic en la barra de volumen', async () => {
+    const wrapper = mount(ControlesVideo, {
+      props: {
+        visible: true,
+        reproduciendo: true,
+        tiempoActual: 0,
+        duracion: 100,
+        muteado: false,
+        volumen: 0.5,
+      },
+    });
+
+    const barra = wrapper.find('.barra-volumen');
+    const rect = { left: 0, width: 60 };
+
+    (barra.element as HTMLElement).getBoundingClientRect = vi.fn(() => rect as DOMRect);
+
+    await barra.trigger('click', { clientX: 30 });
+
+    expect(wrapper.emitted('cambiar-volumen')).toBeTruthy();
+    expect(wrapper.emitted('cambiar-volumen')?.[0]).toEqual([0.5]);
+  });
+
+  it('debe mostrar nivel de volumen al 0% cuando está muteado', () => {
+    const wrapper = mount(ControlesVideo, {
+      props: {
+        visible: true,
+        reproduciendo: true,
+        tiempoActual: 10,
+        duracion: 120,
+        muteado: true,
+        volumen: 0.8,
+      },
+    });
+
+    const nivel = wrapper.find('.nivel-volumen');
+    expect(nivel.attributes('style')).toContain('width: 0%');
+  });
 });

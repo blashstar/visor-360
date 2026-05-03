@@ -68,7 +68,7 @@ export default defineComponent({
             id: 'sala-a-video',
             posicion: { u: 0.2, v: 0.6 },
             titulo: 'Ver vídeo 360°',
-            url: '/ejemplos/video_360_SD.mp4',
+            url: '/ejemplos/video-clip.mp4',
             tipoMedio: 'video',
             accion: 'cambiar_contenido',
             tipo: 'dom',
@@ -105,13 +105,32 @@ export default defineComponent({
       },
       {
         id: 'video',
-        medio: '/ejemplos/video_360_SD.mp4',
+        medio: '/ejemplos/video-clip.mp4',
         tipoMedio: 'video',
-        posicionInicial: { yaw: 0, pitch: 0 },
+        posicionInicial: { u: 0.5, v: 0 },
         zoomInicial: 50,
         marcadores: [
           {
             id: 'video-volver',
+            posicion: { u: 0.5, v: 0.8 },
+            titulo: 'Volver a sala',
+            accion: 'cambiar_contenido',
+            url: '/ejemplos/malla.png',
+            tipoMedio: 'imagen',
+            tipo: 'dom',
+            tooltip: { contenido: 'Detener vídeo', trigger: 'hover' },
+          },
+        ],
+      },
+      {
+        id: 'video2',
+        medio: '/ejemplos/video_360_SD.mp4',
+        tipoMedio: 'video',
+        posicionInicial: { u: 0, v: 0.5 },
+        zoomInicial: 50,
+        marcadores: [
+          {
+            id: 'video2-volver',
             posicion: { u: 0.5, v: 0.8 },
             titulo: 'Volver a sala',
             accion: 'cambiar_contenido',

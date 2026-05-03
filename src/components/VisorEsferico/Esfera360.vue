@@ -657,6 +657,8 @@ export default defineComponent({
         reproduciendo: !elementoVideo.paused,
         tiempoActual: elementoVideo.currentTime || 0,
         duracion: elementoVideo.duration || 0,
+        muteado: elementoVideo.muted,
+        volumen: elementoVideo.volume,
       });
     };
 
@@ -793,6 +795,23 @@ export default defineComponent({
       actualizarMarcadores();
     }, { deep: true });
 
+    const alternarMute = () => {
+      if (elementoVideo) {
+        elementoVideo.muted = !elementoVideo.muted;
+        publicarEstadoVideo();
+      }
+    };
+
+    const cambiarVolumen = (nivel: number) => {
+      if (elementoVideo) {
+        elementoVideo.volume = Math.max(0, Math.min(1, nivel));
+        if (nivel > 0 && elementoVideo.muted) {
+          elementoVideo.muted = false;
+        }
+        publicarEstadoVideo();
+      }
+    };
+
     expose({
       rotarA,
       zoomA,
@@ -803,6 +822,8 @@ export default defineComponent({
       pausarVideo,
       seekVideo,
       reiniciarVideo,
+      alternarMute,
+      cambiarVolumen,
     });
 
     return {

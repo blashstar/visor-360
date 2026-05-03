@@ -26,10 +26,14 @@
     :tiempo-actual="estadoVideo.tiempoActual"
     :duracion="estadoVideo.duracion"
     :visible="esVideo"
+    :muteado="estadoVideo.muteado"
+    :volumen="estadoVideo.volumen"
     @play="manejarPlayVideo"
     @pause="manejarPauseVideo"
     @seek="manejarSeekVideo"
     @reiniciar="manejarReiniciarVideo"
+    @toggle-mute="manejarToggleMute"
+    @cambiar-volumen="manejarCambiarVolumen"
   )
   PanelInformacion.panel-anclado(
     v-if="panelVisible && marcadorSeleccionadoId"
@@ -219,6 +223,8 @@ export default defineComponent({
       reproduciendo: false,
       tiempoActual: 0,
       duracion: 0,
+      muteado: true,
+      volumen: 1,
     });
 
     const manejarEstadoVideo = (estado: { reproduciendo: boolean; tiempoActual: number; duracion: number }) => {
@@ -239,6 +245,14 @@ export default defineComponent({
 
     const manejarReiniciarVideo = () => {
       esferaRef.value?.reiniciarVideo();
+    };
+
+    const manejarToggleMute = () => {
+      esferaRef.value?.alternarMute();
+    };
+
+    const manejarCambiarVolumen = (nivel: number) => {
+      esferaRef.value?.cambiarVolumen(nivel);
     };
 
     const estiloPanel = computed(() => {
@@ -482,6 +496,8 @@ export default defineComponent({
       manejarPauseVideo,
       manejarSeekVideo,
       manejarReiniciarVideo,
+      manejarToggleMute,
+      manejarCambiarVolumen,
       ...api,
     };
   },

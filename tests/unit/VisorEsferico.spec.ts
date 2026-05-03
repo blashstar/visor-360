@@ -289,4 +289,90 @@ describe('VisorEsferico', () => {
     expect(wrapper.emitted('marcador-eliminado')).toBeTruthy();
     expect(wrapper.emitted('marcador-eliminado')?.[0]).toEqual([{ id: '1' }]);
   });
+
+  it('debe ignorar cargarEscena con id inexistente', () => {
+    const wrapper = mount(VisorEsferico, {
+      props: { escenas: escenasMock, escenaInicial: 'sala' },
+    });
+
+    wrapper.vm.cargarEscena('no-existe');
+    expect(wrapper.vm.obtenerEscenaActual()?.id).toBe('sala');
+    expect(wrapper.emitted('escena-cambiada')).toBeFalsy();
+  });
+
+  it('no debe navegar si el marcador no tiene url', async () => {
+    const windowSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const wrapper = mount(VisorEsferico, {
+      props: {
+        medioInicial: imagenMock,
+        tipoMedioInicial: 'imagen',
+        marcadoresIniciales: [
+          { id: 'x', posicion: { u: 0.5, v: 0.5 }, titulo: 'Sin URL', accion: 'navegar' },
+        ],
+      },
+    });
+
+    await wrapper.findComponent({ name: 'Esfera360' }).vm.$emit('marcador-seleccionado', {
+      marcador: { id: 'x', posicion: { u: 0.5, v: 0.5 }, titulo: 'Sin URL', accion: 'navegar' },
+    });
+
+    expect(windowSpy).not.toHaveBeenCalled();
+    windowSpy.mockRestore();
+  });
+
+  it('no debe emitir medio-cambiado si cambiar_contenido carece de url o tipoMedio', async () => {
+    const wrapper = mount(VisorEsferico, {
+      props: {
+        medioInicial: imagenMock,
+        tipoMedioInicial: 'imagen',
+        marcadoresIniciales: [
+          { id: 'y', posicion: { u: 0.5, v: 0.5 }, titulo: 'Incompleto', accion: 'cambiar_contenido' },
+        ],
+      },
+    });
+
+    await wrapper.findComponent({ name: 'Esfera360' }).vm.$emit('marcador-seleccionado', {
+      marcador: { id: 'y', posicion: { u: 0.5, v: 0.5 }, titulo: 'Incompleto', accion: 'cambiar_contenido' },
+    });
+
+    expect(wrapper.emitted('medio-cambiado')).toBeFalsy();
+  });
+
+  it('debe funcionar en modo legacy cuando escenas está vacío', () => {
+    const wrapper = mount(VisorEsferico, {
+      props: {
+        escenas: [],
+        medioInicial: imagenMock,
+        tipoMedioInicial: 'imagen',
+      },
+    });
+
+    expect(wrapper.find('.visor-esferico').exists()).toBe(true);
+    expect(wrapper.vm.obtenerEscenaActual()).toBeNull();
+  });
+
+  it('no debe hacer nada al llamar escenaSiguiente/escenaAnterior en modo legacy', () => {
+    const wrapper = mount(VisorEsferico, {
+      props: { medioInicial: imagenMock, tipoMedioInicial: 'imagen' },
+    });
+
+    wrapper.vm.escenaSiguiente();
+    wrapper.vm.escenaAnterior();
+    expect(wrapper.emitted('escena-cambiada')).toBeFalsy();
+  });
+
+  it('debe ignorar marcador duplicado al agregar', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const wrapper = mount(VisorEsferico, {
+      props: {
+        medioInicial: imagenMock,
+        tipoMedioInicial: 'imagen',
+        marcadoresIniciales: marcadoresMock,
+      },
+    });
+
+    wrapper.vm.agregarMarcador(marcadoresMock[0]);
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
 });

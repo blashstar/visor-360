@@ -189,4 +189,44 @@ describe('ControlesVideo', () => {
     const nivel = wrapper.find('.nivel-volumen');
     expect(nivel.attributes('style')).toContain('width: 0%');
   });
+
+  it('debe clampar seek a 0 cuando el click está antes de la barra', async () => {
+    const wrapper = mount(ControlesVideo, {
+      props: { visible: true, reproduciendo: true, tiempoActual: 0, duracion: 100 },
+    });
+
+    const barra = wrapper.find('.barra-tiempo');
+    (barra.element as HTMLElement).getBoundingClientRect = vi.fn(() => ({ left: 50, width: 200 }) as DOMRect);
+
+    await barra.trigger('click', { clientX: 10 });
+    expect(wrapper.emitted('seek')?.[0]).toEqual([0]);
+  });
+
+  it('debe clampar seek a la duración cuando el click está después de la barra', async () => {
+    const wrapper = mount(ControlesVideo, {
+      props: { visible: true, reproduciendo: true, tiempoActual: 0, duracion: 100 },
+    });
+
+    const barra = wrapper.find('.barra-tiempo');
+    (barra.element as HTMLElement).getBoundingClientRect = vi.fn(() => ({ left: 0, width: 200 }) as DOMRect);
+
+    await barra.trigger('click', { clientX: 300 });
+    expect(wrapper.emitted('seek')?.[0]).toEqual([100]);
+  });
+
+  it('debe clampar volumen entre 0 y 1 al hacer clic fuera de la barra', async () => {
+    const wrapper = mount(ControlesVideo, {
+      props: { visible: true, reproduciendo: true, tiempoActual: 0, duracion: 100, muteado: false, volumen: 0.5 },
+    });
+
+    const barra = wrapper.find('.barra-volumen');
+    (barra.element as HTMLElement).getBoundingClientRect = vi.fn(() => ({ left: 10, width: 60 }) as DOMRect);
+
+    await barra.trigger('click', { clientX: -100 });
+    expect(wrapper.emitted('cambiar-volumen')?.[0]).toEqual([0]);
+
+    vi.clearAllMocks();
+    await barra.trigger('click', { clientX: 500 });
+    expect(wrapper.emitted('cambiar-volumen')?.[1]).toEqual([1]);
+  });
 });

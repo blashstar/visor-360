@@ -12,6 +12,17 @@ export interface ConfiguracionTactil {
 
 /**
  * Configura controles táctiles para el visor usando Hammer.js.
+ *
+ * DISEÑO:
+ * - touchAction: 'none' es obligatorio para que el navegador NO intercepte
+ *   gestos táctiles (scroll, zoom nativo). Sin esto, el visor no responde
+ *   al pan en móviles porque el browser roba el evento para scroll de página.
+ * - Los deltas de pan son INCREMENTALES (no acumulados): ev.deltaX es
+ *   acumulado desde panstart, pero Three.js necesita el delta por frame
+ *   para una rotación proporcional al movimiento del dedo.
+ * - El pinch usa delta relativo (ev.scale - escala anterior) para que
+ *   el zoom responda a la velocidad del gesto, no a la distancia absoluta.
+ *
  * @param config - Configuración de controles táctiles.
  * @returns Instancia de HammerManager.
  */
@@ -30,7 +41,9 @@ export const configurarControlesTactiles = (
     ],
   });
 
-  // Doble tap requiere que el tap simple falle primero
+  // Doble tap requiere que el tap simple falle primero:
+  // sin esta configuración, un doble tap dispara DOS eventos 'tap' + uno 'doubletap',
+  // causando que el visor seleccione un marcador y luego resetee la vista.
   hammer.get('doubletap').recognizeWith('tap');
   hammer.get('tap').requireFailure('doubletap');
 
@@ -55,7 +68,8 @@ export const configurarControlesTactiles = (
 
   hammer.on('panmove', (ev) => {
     if (estaPinchando) return;
-    // Enviar delta incremental (píxeles crudos) para evitar acumulación doble
+    // ev.deltaX es acumulado desde panstart; restamos el último valor
+    // para obtener el desplazamiento de ESTE frame únicamente.
     const dx = ev.deltaX - ultimoPanX;
     const dy = ev.deltaY - ultimoPanY;
     config.alPan(dx, dy);
@@ -73,6 +87,8 @@ export const configurarControlesTactiles = (
   });
 
   hammer.on('pinchmove', (ev) => {
+    // Delta relativo: solo importa cuánto cambió la escala desde el último frame,
+    // no la escala absoluta desde el inicio del gesto.
     const delta = ev.scale - distanciaPinchInicial;
     config.alPinch(delta);
     distanciaPinchInicial = ev.scale;

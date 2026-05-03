@@ -14,13 +14,12 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted, onUnmounted, watch, computed, type PropType } from 'vue';
 import * as THREE from 'three';
-import { gsap } from 'gsap';
 import { cargarTexturaImagen, cargarTexturaVideo } from '@/utils/media-helpers';
-import { crearMarcador3D, posicionACartesiano, esfericaATextura } from '@/utils/three-helpers';
+import { crearMarcador3D, posicionACartesiano, esfericaATextura, posicionAEsferica } from '@/utils/three-helpers';
 import { normalizarYaw, diferenciaAngular, animarValores, matarAnimaciones, EasingVisor } from '@/utils/animaciones';
 import { configurarControlesTactiles } from './ControlesTactiles';
 import MarcadorVue from './Marcador.vue';
-import type { Marcador, TipoMedio, PosicionPantalla, CoordenadaEsferica, EstadoCamara, ConfiguracionVideo } from './tipos';
+import type { Marcador, TipoMedio, PosicionPantalla, CoordenadaEsferica, EstadoCamara, ConfiguracionVideo, ApiEsfera360 } from './tipos';
 
 export default defineComponent({
   name: 'Esfera360',
@@ -75,11 +74,25 @@ export default defineComponent({
     let velocidadPitch = 0;
     let idAnimacionInercia: number | null = null;
 
+    // ── Constantes del visor ──
+    // FOV mínimo = zoom máximo (más cercano), FOV máximo = zoom mínimo (más lejano).
+    // Estos valores fueron elegidos empíricamente para cubrir desde una vista amplia
+    // (120°) hasta un zoom considerable (30°) sin perder sensación de panorama.
     const FOV_MIN = 30;
     const FOV_MAX = 120;
+
+    // Límites de pitch ligeramente menores que ±90° para evitar el gimbal lock
+    // (cuando la cámara mira exactamente al polo, el yaw pierde significado).
     const PITCH_MIN = -Math.PI / 2 + 0.01;
     const PITCH_MAX = Math.PI / 2 - 0.01;
+
+    // Fricción de inercia: cada frame retiene el 92% de la velocidad anterior.
+    // Un valor menor frena más rápido (más pegajoso); mayor dura más (más flotante).
+    // 0.92 ofrece ~1.5 segundos de deslizamiento natural tras soltar.
     const FACTOR_FRICCION = 0.92;
+
+    // Factor de conversión de rueda del mouse a unidades de zoom.
+    // Ajustado para que una vuelta completa de rueda (~100 deltaY) ≈ 5 puntos de zoom.
     const ZOOM_WHEEL_FACTOR = 0.05;
 
     const posicionesPantalla = ref<Record<string, PosicionPantalla>>({});
@@ -198,11 +211,33 @@ export default defineComponent({
     const crearEsfera = async () => {
       if (!escena || !overlayTransicion) return;
 
+      // Fundido a negro antes de cambiar de medio: evita el flash blanco
+      // cuando la textura anterior se descarga antes de que la nueva esté lista.
       overlayTransicion.style.opacity = '1';
       await new Promise((r) => setTimeout(r, 150));
 
+      limpiarMedioActual();
+
+      try {
+        texturaActual = await cargarNuevaTextura();
+      } catch (error) {
+        console.error('Error al cargar el medio:', error);
+        overlayTransicion.style.opacity = '0';
+        return;
+      }
+
+      construirMallaEsfera();
+
+      // Fundido de entrada: da tiempo al GPU para que la textura esté lista
+      // antes de mostrarla, evitando artefactos de renderizado parcial.
+      requestAnimationFrame(() => {
+        if (overlayTransicion) overlayTransicion.style.opacity = '0';
+      });
+    };
+
+    const limpiarMedioActual = () => {
       if (esfera) {
-        escena.remove(esfera);
+        escena!.remove(esfera);
         esfera.geometry.dispose();
         (esfera.material as THREE.MeshBasicMaterial).dispose();
         esfera = null;
@@ -218,32 +253,33 @@ export default defineComponent({
         texturaActual.dispose();
         texturaActual = null;
       }
+    };
 
-      try {
-        if (props.tipoMedio === 'video') {
-          texturaActual = await cargarTexturaVideo(props.medio, props.autoReproducir, props.configuracionVideo);
-          elementoVideo = (texturaActual as THREE.VideoTexture).image as HTMLVideoElement;
-          configurarListenersVideo();
-        } else {
-          texturaActual = await cargarTexturaImagen(props.medio);
-          elementoVideo = null;
-        }
-      } catch (error) {
-        console.error('Error al cargar el medio:', error);
-        overlayTransicion.style.opacity = '0';
-        return;
+    const cargarNuevaTextura = async (): Promise<THREE.Texture> => {
+      if (props.tipoMedio === 'video') {
+        const textura = await cargarTexturaVideo(props.medio, props.autoReproducir, props.configuracionVideo);
+        elementoVideo = (textura as THREE.VideoTexture).image as HTMLVideoElement;
+        configurarListenersVideo();
+        return textura;
       }
+      elementoVideo = null;
+      return cargarTexturaImagen(props.medio);
+    };
 
+    const construirMallaEsfera = () => {
+      // Radio 500: arbitrariamente grande para que la cámara en (0,0,0)
+      // nunca vea los bordes de la esfera, creando ilusión de infinito.
       const geometria = new THREE.SphereGeometry(500, 60, 40);
+
+      // Invertir escala en X: la cámara está en el centro mirando hacia afuera,
+      // pero la textura debe verse desde el interior de la esfera.
+      // scale(-1, 1, 1) invierte las normales para que el material se renderice
+      // en la cara interna en lugar de la externa.
       geometria.scale(-1, 1, 1);
 
       const material = new THREE.MeshBasicMaterial({ map: texturaActual });
       esfera = new THREE.Mesh(geometria, material);
-      escena.add(esfera);
-
-      requestAnimationFrame(() => {
-        if (overlayTransicion) overlayTransicion.style.opacity = '0';
-      });
+      escena!.add(esfera);
     };
 
     const actualizarMarcadores = () => {
@@ -272,18 +308,28 @@ export default defineComponent({
     const proyectarMarcadores = () => {
       if (!camara || !renderizador) return;
 
+      // Capturar en const para que TypeScript estreche el tipo
+      // y permita su uso dentro del callback de forEach.
+      const camaraActual = camara;
       const ancho = renderizador.domElement.clientWidth;
       const alto = renderizador.domElement.clientHeight;
       const nuevasPosiciones: Record<string, PosicionPantalla> = {};
 
       props.marcadores.forEach((marcador) => {
         if (marcador.visible === false) {
+          // Mover fuera de pantalla en lugar de ocultar con CSS:
+          // así evitamos que el marcador DOM siga interceptando eventos
+          // de mouse en su última posición conocida.
           nuevasPosiciones[marcador.id] = { x: -9999, y: -9999, visible: false };
           return;
         }
 
         const posicion = posicionACartesiano(marcador.posicion, 500);
-        const proyectado = posicion.clone().project(camara);
+
+        // project() transforma coordenadas mundo a Normalized Device Coordinates (NDC):
+        // x,y ∈ [-1,1], z ∈ [-1,1] donde z < 1 significa "frente al plano cercano"
+        // (i.e. visible para la cámara, no detrás).
+        const proyectado = posicion.clone().project(camaraActual);
 
         const x = (proyectado.x * 0.5 + 0.5) * ancho;
         const y = (-proyectado.y * 0.5 + 0.5) * alto;
@@ -405,7 +451,7 @@ export default defineComponent({
     };
 
     const manejarMouseDown = (e: MouseEvent) => {
-      if (e.button !== 0) return;
+      if (e.button !== 0) return; // Solo clic izquierdo
       estaArrastrando = true;
       seMovio = false;
       inicioX = e.clientX;
@@ -443,6 +489,8 @@ export default defineComponent({
       if (!estaArrastrando) return;
       estaArrastrando = false;
 
+      // Distinguir entre "click" (sin movimiento significativo) y "drag":
+      // si no se movió más allá del umbral, tratamos como click para seleccionar marcadores.
       if (!seMovio) {
         manejarSeleccion(inicioX, inicioY);
       } else {
@@ -586,9 +634,9 @@ export default defineComponent({
       const marcador = props.marcadores.find((m) => m.id === id);
       if (!marcador) return;
 
-      const posicion = esfericaATextura(marcador.posicion);
-      const yawObj = (posicion.u - 0.5) * 2 * Math.PI;
-      const pitchObj = (0.5 - posicion.v) * Math.PI;
+      const posicion = posicionAEsferica(marcador.posicion);
+      const yawObj = posicion.yaw;
+      const pitchObj = posicion.pitch;
 
       if (marcador.zoomObjetivo !== undefined) {
         if (animar) {
@@ -825,7 +873,7 @@ export default defineComponent({
       reiniciarVideo,
       alternarMute,
       cambiarVolumen,
-    });
+    } as ApiEsfera360);
 
     return {
       contenedor,

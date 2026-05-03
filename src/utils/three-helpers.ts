@@ -71,6 +71,32 @@ export const esfericaATextura = (
 };
 
 /**
+ * Convierte coordenadas de textura (u, v) a esféricas (yaw, pitch).
+ * @param textura - Coordenadas de textura (u, v) en rango 0..1.
+ * @returns Coordenadas esféricas (yaw, pitch).
+ */
+export const texturaAEsferica = (
+  textura: CoordenadaTextura
+): CoordenadaEsferica => {
+  return {
+    yaw: (textura.u - 0.5) * 2 * Math.PI,
+    pitch: (0.5 - textura.v) * Math.PI,
+  };
+};
+
+/**
+ * Convierte cualquier posición de marcador a coordenadas esféricas.
+ */
+export const posicionAEsferica = (
+  posicion: CoordenadaTextura | CoordenadaEsferica
+): CoordenadaEsferica => {
+  if (esCoordenadaTextura(posicion)) {
+    return texturaAEsferica(posicion);
+  }
+  return posicion;
+};
+
+/**
  * Crea un marcador 3D en la esfera.
  * @param escena - Escena de Three.js.
  * @param coordenada - Coordenadas de textura (u, v) o esféricas del marcador.

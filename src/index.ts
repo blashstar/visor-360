@@ -3,9 +3,10 @@ import Esfera360 from './components/VisorEsferico/Esfera360.vue';
 import Marcador from './components/VisorEsferico/Marcador.vue';
 import PanelInformacion from './components/VisorEsferico/PanelInformacion.vue';
 import Tooltip from './components/VisorEsferico/Tooltip.vue';
+import ControlesVideo from './components/VisorEsferico/ControlesVideo.vue';
 
 // Exportar componentes individuales
-export { VisorEsferico, Esfera360, Marcador, PanelInformacion, Tooltip };
+export { VisorEsferico, Esfera360, Marcador as MarcadorVue, PanelInformacion, Tooltip, ControlesVideo };
 
 // Exportar tipos
 export type {
@@ -21,12 +22,13 @@ export type {
   Marcador,
   Escena,
   ConfiguracionEscena,
+  ConfiguracionVideo,
+  EstadoVideo,
   EventoMarcadorSeleccionado,
   EventoMedioCambiado,
   EventoEscenaCambiada,
   EstadoCamara,
-  PropsVisorEsferico,
-  EventosVisorEsferico,
+  ApiEsfera360,
   ApiVisorEsferico,
 } from './components/VisorEsferico/tipos';
 

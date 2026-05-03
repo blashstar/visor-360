@@ -107,7 +107,7 @@ export default defineComponent({
         id: 'video',
         medio: '/ejemplos/video.webm',
         tipoMedio: 'video',
-        posicionInicial: { u: 0, v: 1 },
+        posicionInicial: { yaw: 0, pitch: 0 },
         zoomInicial: 50,
         marcadores: [
           {

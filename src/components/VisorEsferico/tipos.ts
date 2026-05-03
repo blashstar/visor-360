@@ -147,6 +147,8 @@ export interface EstadoCamara {
 
 /**
  * Estado de reproducción del video expuesto por Esfera360.
+ * Se emite periódicamente para sincronizar la UI de controles de video
+ * sin necesidad de acceder directamente al elemento <video> del DOM.
  */
 export interface EstadoVideo {
   reproduciendo: boolean;
@@ -154,56 +156,6 @@ export interface EstadoVideo {
   duracion: number;
   muteado: boolean;
   volumen: number;
-}
-
-/**
- * Props del componente VisorEsferico.
- */
-export interface PropsVisorEsferico {
-  /** URL del medio inicial (imagen o vídeo). */
-  medioInicial: string;
-  /** Tipo de medio inicial ('imagen' o 'video'). */
-  tipoMedioInicial?: TipoMedio;
-  /** Lista de marcadores a mostrar en la esfera. */
-  marcadoresIniciales?: Marcador[];
-  /** Color de fondo del visor (default: '#000000'). */
-  colorFondo?: string;
-  /** Sensibilidad de los controles de rotación (default: 1). */
-  sensibilidadRotacion?: number;
-  /** Sensibilidad del zoom (default: 1). */
-  sensibilidadZoom?: number;
-  /** Autoplay para vídeos (default: true). */
-  autoReproducir?: boolean;
-  /** Habilitar controles táctiles (default: true). */
-  controlesTactiles?: boolean;
-  /** Habilitar controles de mouse (default: true). */
-  controlesMouse?: boolean;
-  /** Habilitar controles de teclado (default: true). */
-  tecladoHabilitado?: boolean;
-  /** Posición inicial de la cámara (default: {yaw:0, pitch:0}). */
-  posicionInicial?: CoordenadaEsferica;
-  /** Zoom inicial, 0-100 (default: 50). */
-  zoomInicial?: number;
-}
-
-/**
- * Eventos emitidos por el componente VisorEsferico.
- */
-export interface EventosVisorEsferico {
-  /** Se emite cuando un marcador es seleccionado. */
-  (e: 'marcador-seleccionado', payload: EventoMarcadorSeleccionado): void;
-  /** Se emite cuando el medio del visor cambia. */
-  (e: 'medio-cambiado', payload: EventoMedioCambiado): void;
-  /** Se emite cuando el vídeo se pausa. */
-  (e: 'video-pausado'): void;
-  /** Se emite cuando el vídeo se reanuda. */
-  (e: 'video-reanudado'): void;
-  /** Se emite cuando se agrega un marcador. */
-  (e: 'marcador-agregado', payload: { marcador: Marcador }): void;
-  /** Se emite cuando se elimina un marcador. */
-  (e: 'marcador-eliminado', payload: { id: string }): void;
-  /** Se emite cuando se actualiza un marcador. */
-  (e: 'marcador-actualizado', payload: { marcador: Marcador }): void;
 }
 
 /**
@@ -273,6 +225,34 @@ export interface EventoEscenaCambiada {
 }
 
 /**
+ * API pública expuesta por Esfera360 via template ref.
+ */
+export interface ApiEsfera360 {
+  /** Rotar la cámara a una posición con animación opcional. */
+  rotarA: (posicion: CoordenadaEsferica, animar?: boolean) => void;
+  /** Establecer el zoom con animación opcional. */
+  zoomA: (nivel: number, animar?: boolean) => void;
+  /** Animar la cámara hacia un marcador. */
+  irAMarcador: (id: string, animar?: boolean) => void;
+  /** Resetear la vista a la posición inicial. */
+  resetearVista: (animar?: boolean) => void;
+  /** Obtener estado actual de la cámara. */
+  obtenerEstado: () => EstadoCamara | null;
+  /** Reproducir el video. */
+  reproducirVideo: () => void;
+  /** Pausar el video. */
+  pausarVideo: () => void;
+  /** Seek a un tiempo específico. */
+  seekVideo: (tiempo: number) => void;
+  /** Reiniciar el video. */
+  reiniciarVideo: () => void;
+  /** Alternar mute del video. */
+  alternarMute: () => void;
+  /** Cambiar volumen del video. */
+  cambiarVolumen: (nivel: number) => void;
+}
+
+/**
  * API pública expuesta por template ref.
  */
 export interface ApiVisorEsferico {
@@ -297,7 +277,7 @@ export interface ApiVisorEsferico {
   /** Resetear la vista a la posición inicial. */
   resetearVista: (animar?: boolean) => void;
   /** Obtener estado actual de la cámara. */
-  obtenerEstado: () => EstadoCamara;
+  obtenerEstado: () => EstadoCamara | null;
   /** Cargar una escena por su ID. */
   cargarEscena: (id: string) => void;
   /** Avanzar a la siguiente escena. */

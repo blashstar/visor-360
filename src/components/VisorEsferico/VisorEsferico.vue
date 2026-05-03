@@ -59,6 +59,7 @@ import type {
   CoordenadaEsferica,
   EstadoCamara,
   ApiVisorEsferico,
+  ApiEsfera360,
   Escena,
   EventoEscenaCambiada,
   ConfiguracionVideo,
@@ -144,7 +145,7 @@ export default defineComponent({
     'escena-cambiada',
   ],
   setup(props, { emit, expose }) {
-    const esferaRef = ref<InstanceType<typeof Esfera360> | null>(null);
+    const esferaRef = ref<ApiEsfera360 | null>(null);
 
     // ── Determinar modo: escenas o legacy ──
     const modoEscenas = computed(() => props.escenas.length > 0);
@@ -240,7 +241,7 @@ export default defineComponent({
       volumen: 1,
     });
 
-    const manejarEstadoVideo = (estado: { reproduciendo: boolean; tiempoActual: number; duracion: number }) => {
+    const manejarEstadoVideo = (estado: { reproduciendo: boolean; tiempoActual: number; duracion: number; muteado: boolean; volumen: number }) => {
       estadoVideo.value = estado;
     };
 
@@ -285,33 +286,43 @@ export default defineComponent({
       posicionesPantalla.value = posiciones;
     };
 
+    const mostrarPanelMarcador = (marcador: Marcador) => {
+      panelTitulo.value = marcador.titulo;
+      panelContenido.value = marcador.contenido || '';
+      marcadorSeleccionadoId.value = marcador.id;
+      panelVisible.value = true;
+    };
+
+    const navegarAUrl = (url: string) => {
+      window.open(url, '_blank');
+    };
+
+    const cambiarMedioDesdeMarcador = (url: string, tipoMedio: TipoMedio) => {
+      if (modoEscenas.value) {
+        // En modo escenas, preferimos transicionar a una escena existente
+        // si el URL coincide con alguna, para preservar metadatos (título, marcadores, etc.)
+        const idx = props.escenas.findIndex((e) => e.medio === url);
+        if (idx >= 0) {
+          cargarEscenaPorIndice(idx);
+          return;
+        }
+      }
+      medioActual.value = url;
+      tipoMedioActual.value = tipoMedio;
+    };
+
     const manejarMarcadorSeleccionado = (evento: { marcador: Marcador; dobleClick?: boolean }) => {
       const marcador = evento.marcador;
       emit('marcador-seleccionado', { marcador, dobleClick: evento.dobleClick });
 
       switch (marcador.accion) {
         case 'mostrar_panel':
-          panelTitulo.value = marcador.titulo;
-          panelContenido.value = marcador.contenido || '';
-          marcadorSeleccionadoId.value = marcador.id;
-          panelVisible.value = true;
+          mostrarPanelMarcador(marcador);
           break;
 
         case 'cambiar_contenido':
           if (marcador.url && marcador.tipoMedio) {
-            if (modoEscenas.value) {
-              // Buscar si el URL corresponde a una escena
-              const idx = props.escenas.findIndex((e) => e.medio === marcador.url);
-              if (idx >= 0) {
-                cargarEscenaPorIndice(idx);
-              } else {
-                medioActual.value = marcador.url;
-                tipoMedioActual.value = marcador.tipoMedio;
-              }
-            } else {
-              medioActual.value = marcador.url;
-              tipoMedioActual.value = marcador.tipoMedio;
-            }
+            cambiarMedioDesdeMarcador(marcador.url, marcador.tipoMedio);
             panelVisible.value = false;
             marcadorSeleccionadoId.value = null;
             const payload: EventoMedioCambiado = {
@@ -324,7 +335,7 @@ export default defineComponent({
 
         case 'navegar':
           if (marcador.url) {
-            window.open(marcador.url, '_blank');
+            navegarAUrl(marcador.url);
           }
           break;
 

@@ -1,6 +1,6 @@
 # Visor Esférico 360°
 
-[![npm version](https://img.shields.io/npm/v/@joffre/visor-360.svg)](https://www.npmjs.com/package/@joffre/visor-360)
+[![npm version](https://img.shields.io/npm/v/@blashstar/vue-360.svg)](https://www.npmjs.com/package/@blashstar/vue-360)
 
 Componente Vue 3 para visualización panorámica esférica 360°. Soporta imágenes equirectangulares y vídeos 360° con controles de mouse, táctiles y teclado, marcadores interactivos, navegación por escenas y animaciones suaves mediante GSAP.
 
@@ -18,7 +18,7 @@ Componente Vue 3 para visualización panorámica esférica 360°. Soporta imáge
 ## Instalación
 
 ```bash
-npm install @joffre/visor-360
+npm install @blashstar/vue-360
 ```
 
 ### Dependencias peer
@@ -34,8 +34,8 @@ npm install vue@^3.4.0 three@^0.160.0 hammerjs@^2.0.8 gsap@^3.15.0
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue';
-import { VisorEsferico } from '@joffre/visor-360';
-import type { ApiVisorEsferico, Escena } from '@joffre/visor-360';
+import { VisorEsferico } from '@blashstar/vue-360';
+import type { ApiVisorEsferico, Escena } from '@blashstar/vue-360';
 
 const visorRef = ref<ApiVisorEsferico | null>(null);
 
@@ -231,8 +231,8 @@ const escenaVideo: Escena = {
 ## Desarrollo local
 
 ```bash
-git clone https://github.com/blashstar/visor-360.git
-cd visor-360
+git clone https://github.com/blashstar/vue-360.git
+cd vue-360
 npm install
 npm run dev        # Servidor de desarrollo con demo
 npm run build      # Build de librería ESM + tipos
@@ -244,7 +244,7 @@ npm run test:unit  # Pruebas unitarias
 ## Arquitectura del build
 
 - **Formato:** ESM (`es`)
-- **Entry point JS:** `dist/visor-360.js`
+- **Entry point JS:** `dist/vue-360.js`
 - **Entry point tipos:** `dist/index.d.ts`
 - **Externos:** `vue`, `three`, `hammerjs` (no se incluyen en el bundle)
 - **Tree-shaking:** Habilitado vía `preserveModules: true`

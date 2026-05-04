@@ -16,7 +16,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      name: 'VisorEsferico',
+      name: 'Vue360',
       formats: ['es'],
     },
     rollupOptions: {
@@ -28,6 +28,7 @@ export default defineConfig({
           hammerjs: 'Hammer',
         },
         preserveModules: true,
+        entryFileNames: 'vue-360.js',
       },
     },
     minify: true,

@@ -228,7 +228,7 @@ Desarrollar un **módulo ESM** en **Vue 3 + TypeScript + Three.js** que provea u
 
 ### **5.1. Estructura del Proyecto**
 ```
-visor-360/
+vue-360/
 ├── src/
 │   ├── components/
 │   │   ├── VisorEsferico/
@@ -964,7 +964,7 @@ export default defineConfig({
 ### **7.2. `package.json` (Scripts y Dependencias)**
 ```json
 {
-  "name": "@joffre/visor-360",
+  "name": "@blashstar/vue-360",
   "version": "1.0.0",
   "description": "Componente Vue.js para visor esférico 360° con soporte para imágenes y vídeos",
   "type": "module",
@@ -978,12 +978,12 @@ export default defineConfig({
     "prepare": "npm run build"
   },
   "files": ["dist"],
-  "main": "./dist/visor-360.es.js",
-  "module": "./dist/visor-360.es.js",
+  "main": "./dist/vue-360.js",
+  "module": "./dist/vue-360.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/visor-360.es.js",
+      "import": "./dist/vue-360.js",
       "types": "./dist/index.d.ts"
     }
   },
@@ -1200,7 +1200,7 @@ export default defineConfig({
 - [ ] El proyecto se compila como módulo ESM con `vite build`.
 - [ ] Se puede importar en otro proyecto Vue.js:
   ```typescript
-  import { VisorEsferico } from '@joffre/visor-360';
+  import { VisorEsferico } from '@blashstar/vue-360';
   ```
 - [ ] Los tipos TypeScript están disponibles y son correctos.
 
@@ -1321,14 +1321,14 @@ export default defineConfig({
 ---
 ### **14.2. Ejemplo de `README.md`**
 ```markdown
-# @joffre/visor-360
+# @blashstar/vue-360
 
 Componente Vue.js para visualizar **imágenes y vídeos 360°** con marcadores interactivos, tooltips, controles de teclado y soporte para pantallas táctiles.
 
 ## Instalación
 
 ```bash
-npm install @joffre/visor-360
+npm install @blashstar/vue-360
 ```
 
 ## Uso Básico
@@ -1346,8 +1346,8 @@ npm install @joffre/visor-360
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import { VisorEsferico } from '@joffre/visor-360';
-import type { Marcador } from '@joffre/visor-360';
+import { VisorEsferico } from '@blashstar/vue-360';
+import type { Marcador } from '@blashstar/vue-360';
 
 export default defineComponent({
   components: { VisorEsferico },
@@ -1391,8 +1391,8 @@ export default defineComponent({
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import { VisorEsferico } from '@joffre/visor-360';
-import type { EscenaConfig, Marcador } from '@joffre/visor-360';
+import { VisorEsferico } from '@blashstar/vue-360';
+import type { EscenaConfig, Marcador } from '@blashstar/vue-360';
 
 export default defineComponent({
   components: { VisorEsferico },
@@ -1537,7 +1537,7 @@ import type {
   ApiVisorEsferico,
   Escena,
   EscenaConfig,
-} from '@joffre/visor-360';
+} from '@blashstar/vue-360';
 ```
 ```
 

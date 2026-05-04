@@ -25,7 +25,7 @@ Módulo ESM desarrollado con **Vue 3 + TypeScript + Three.js** que provee un com
 ## Estructura de carpetas
 
 ```
-visor-360/
+vue-360/
 ├── src/
 │   ├── components/
 │   │   ├── VisorEsferico/

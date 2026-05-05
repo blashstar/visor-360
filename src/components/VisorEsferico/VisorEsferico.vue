@@ -12,7 +12,7 @@
     :teclado-habilitado="tecladoHabilitado"
     :sensibilidad-rotacion="sensibilidadRotacion"
     :sensibilidad-zoom="sensibilidadZoom"
-    :posicion-inicial="posicionActual"
+    :posicion-inicial="normalizarPosicion(posicionActual)"
     :zoom-inicial="zoomActual"
     :configuracion-video="configuracionVideoActual"
     @marcador-seleccionado="manejarMarcadorSeleccionado"
@@ -57,6 +57,8 @@ import type {
   EventoMedioCambiado,
   PosicionPantalla,
   CoordenadaEsferica,
+  CoordenadaTextura,
+  PosicionInicial,
   EstadoCamara,
   ApiVisorEsferico,
   ApiEsfera360,
@@ -64,6 +66,18 @@ import type {
   EventoEscenaCambiada,
   ConfiguracionVideo,
 } from './tipos';
+
+const convertirUVaEsferica = (uv: CoordenadaTextura): CoordenadaEsferica => {
+  const yaw = (uv.u - 0.5) * 2 * Math.PI;
+  const pitch = (0.5 - uv.v) * Math.PI;
+  return { yaw, pitch };
+};
+
+const normalizarPosicion = (posicion: PosicionInicial | undefined): CoordenadaEsferica => {
+  if (!posicion) return { yaw: 0, pitch: 0 };
+  if ('yaw' in posicion) return posicion;
+  return convertirUVaEsferica(posicion);
+};
 
 export default defineComponent({
   name: 'VisorEsferico',
@@ -162,7 +176,7 @@ export default defineComponent({
     const medioActual = ref<string>(props.medioInicial);
     const tipoMedioActual = ref<TipoMedio>(props.tipoMedioInicial);
     const marcadoresActuales = ref<Marcador[]>(props.marcadoresIniciales);
-    const posicionActual = ref<CoordenadaEsferica>(props.posicionInicial);
+    const posicionActual = ref<PosicionInicial | undefined>(props.posicionInicial);
     const zoomActual = ref<number>(props.zoomInicial);
 
     // ── Inicializar según modo ──

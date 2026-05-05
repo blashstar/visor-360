@@ -107,7 +107,7 @@ html, body, #app {
 | `tecladoHabilitado` | `boolean` | `true` | Habilitar controles de teclado |
 | `sensibilidadRotacion` | `number` | `1` | Multiplicador de sensibilidad de rotación |
 | `sensibilidadZoom` | `number` | `1` | Multiplicador de sensibilidad de zoom |
-| `posicionInicial` | `CoordenadaEsferica` | `{yaw:0, pitch:0}` | Orientación inicial de la cámara |
+| `posicionInicial` | `CoordenadaEsferica \| CoordenadaTextura` | `{yaw:0, pitch:0}` | Orientación inicial de la cámara (esférica o UV) |
 | `zoomInicial` | `number` | `50` | Nivel de zoom inicial (0–100) |
 
 ## Sistema de escenas
@@ -123,7 +123,7 @@ interface Escena {
   medio: string;                 // URL de imagen o vídeo
   tipoMedio?: 'imagen' | 'video';
   marcadores?: Marcador[];
-  posicionInicial?: CoordenadaEsferica;  // { yaw, pitch }
+  posicionInicial?: CoordenadaEsferica | CoordenadaTextura;  // { yaw, pitch } o { u, v }
   zoomInicial?: number;          // 0–100
   configuracionVideo?: ConfiguracionVideo;
 }

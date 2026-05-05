@@ -1,6 +1,6 @@
 {
   "name": "@blashstar/vue-360",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Componente Vue.js para visor esférico 360° con soporte para imágenes y vídeos",
   "type": "module",
   "scripts": {
@@ -22,7 +22,8 @@
     ".": {
       "import": "./dist/vue-360.js",
       "types": "./dist/index.d.ts"
-    }
+    },
+    "./style.css": "./dist/style.css"
   },
   "dependencies": {},
   "devDependencies": {

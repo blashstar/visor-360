@@ -29,6 +29,11 @@ export interface CoordenadaEsferica {
 export type PosicionMarcador = CoordenadaTextura | CoordenadaEsferica;
 
 /**
+ * Posición inicial de la cámara: puede ser UV o esférica.
+ */
+export type PosicionInicial = CoordenadaTextura | CoordenadaEsferica;
+
+/**
  * Acciones disponibles para un marcador al ser seleccionado.
  */
 export type AccionMarcador =
@@ -192,8 +197,8 @@ export interface Escena {
   tipoMedio?: TipoMedio;
   /** Lista de marcadores de la escena. */
   marcadores?: Marcador[];
-  /** Posición inicial de la cámara para esta escena. */
-  posicionInicial?: CoordenadaEsferica;
+  /** Posición inicial de la cámara para esta escena (UV o esférica). */
+  posicionInicial?: PosicionInicial;
   /** Zoom inicial para esta escena (0-100, default: 50). */
   zoomInicial?: number;
   /** Configuración específica para video (solo aplica cuando tipoMedio es 'video'). */

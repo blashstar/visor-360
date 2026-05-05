@@ -9,6 +9,22 @@
       @seleccionar="manejarSeleccionMarcador(marcador, $event)"
       @hover="manejarHoverMarcador(marcador, $event)"
     )
+  .overlay-transicion(
+    v-if="opacidadTransicion > 0"
+    :style="{ opacity: opacidadTransicion }"
+  )
+    img.transicion-img(
+      v-if="tipoMedio === 'imagen'"
+      :src="medio"
+      alt="Transición"
+    )
+    video.transicion-video(
+      v-else-if="tipoMedio === 'video'"
+      :src="medio"
+      autoplay
+      muted
+      loop
+    )
 </template>
 
 <script lang="ts">
@@ -38,6 +54,7 @@ export default defineComponent({
     posicionInicial: { type: Object as PropType<CoordenadaEsferica>, default: () => ({ yaw: 0, pitch: 0 }) },
     zoomInicial: { type: Number, default: 50 },
     configuracionVideo: { type: Object as PropType<ConfiguracionVideo>, default: () => ({}) },
+    opacidadTransicion: { type: Number, default: 0 },
   },
   emits: ['marcador-seleccionado', 'marcador-hover', 'actualizar-posiciones', 'video-pausado', 'video-reanudado', 'estado-cambiado', 'estado-video'],
   setup(props, { emit, expose }) {
@@ -909,4 +926,20 @@ export default defineComponent({
   height 100%
   pointer-events none
   z-index 5
+
+.overlay-transicion
+  position absolute
+  top 0
+  left 0
+  width 100%
+  height 100%
+  z-index 10
+  pointer-events none
+  background #000
+
+.transicion-img,
+.transicion-video
+  width 100%
+  height 100%
+  object-fit cover
 </style>

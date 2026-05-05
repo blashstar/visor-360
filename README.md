@@ -109,6 +109,36 @@ html, body, #app {
 | `sensibilidadZoom` | `number` | `1` | Multiplicador de sensibilidad de zoom |
 | `posicionInicial` | `CoordenadaEsferica \| CoordenadaTextura` | `{yaw:0, pitch:0}` | Orientación inicial de la cámara (esférica o UV) |
 | `zoomInicial` | `number` | `50` | Nivel de zoom inicial (0–100) |
+| `duracionTransicion` | `number` | `300` | Duración del fade entre escenas (ms) |
+
+## Precarga y Transiciones
+
+El visor implementa precarga automática de imágenes y transiciones fluidas entre escenas:
+
+### Precarga de imágenes
+
+Cuando se asigna un array de escenas, el visor precarga automáticamente las imágenes de todas las escenas (excepto vídeos) para que estén disponibles en cache cuando el usuario navegue a ellas. Esto reduce los tiempos de carga al cambiar de escena.
+
+### Transiciones con fade
+
+Al cambiar de escena, se produce un crossfade suave entre la escena actual y la siguiente. La duración de la transición es configurable mediante la prop `duracionTransicion` (en milisegundos, default: 300ms).
+
+```vue
+<template>
+  <VisorEsferico
+    :escenas="escenas"
+    :duracion-transicion="500"
+  />
+</template>
+```
+
+Durante la transición:
+1. La nueva imagen se muestra con opacidad 0 (overlay invisible)
+2. La opacidad aumenta gradualmente hasta 1 (fade in)
+3. Se actualizan los marcadores y posición de cámara
+4. La transición se completa sin parpadeos
+
+> **Nota:** La precarga se hace en paralelo. Si una imagen falla, el visor continuará funcionando sin ella.
 
 ## Sistema de escenas
 

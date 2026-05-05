@@ -2,8 +2,8 @@
 .visor-esferico(ref="visor" tabindex="0")
   Esfera360(
     ref="esferaRef"
-    :medio="medioActual"
-    :tipo-medio="tipoMedioActual"
+    :medio="transicionActiva ? siguienteMedio : medioActual"
+    :tipo-medio="transicionActiva ? siguienteTipoMedio : tipoMedioActual"
     :marcadores="marcadoresActuales"
     :color-fondo="colorFondo"
     :auto-reproducir="autoReproducir"
@@ -12,9 +12,10 @@
     :teclado-habilitado="tecladoHabilitado"
     :sensibilidad-rotacion="sensibilidadRotacion"
     :sensibilidad-zoom="sensibilidadZoom"
-    :posicion-inicial="normalizarPosicion(posicionActual)"
+    :posicion-inicial="normalizarPosicion(transicionActiva ? siguientePosicion : posicionActual)"
     :zoom-inicial="zoomActual"
     :configuracion-video="configuracionVideoActual"
+    :opacidad-transicion="opacidadTransicion"
     @marcador-seleccionado="manejarMarcadorSeleccionado"
     @marcador-hover="manejarMarcadorHover"
     @actualizar-posiciones="actualizarPosicionesPantalla"
@@ -109,6 +110,10 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    duracionTransicion: {
+      type: Number,
+      default: 300,
+    },
     // ── Configuración común ──
     colorFondo: {
       type: String,
@@ -179,6 +184,72 @@ export default defineComponent({
     const posicionActual = ref<PosicionInicial | undefined>(props.posicionInicial);
     const zoomActual = ref<number>(props.zoomInicial);
 
+    // ── Precarga de imágenes ──
+    const precargasCargadas = ref<Set<string>>(new Set());
+    const cargandoPrecarga = ref(false);
+
+    const precargarImagenes = async (escenas: Escena[]) => {
+      if (cargandoPrecarga.value) return;
+      cargandoPrecarga.value = true;
+
+      const urls = escenas
+        .filter(e => e.tipoMedio !== 'video')
+        .map(e => e.medio)
+        .filter(url => url && !precargasCargadas.value.has(url));
+
+      await Promise.all(
+        urls.map(url => {
+          return new Promise<void>((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+              precargasCargadas.value.add(url);
+              resolve();
+            };
+            img.onerror = () => resolve();
+            img.src = url;
+          });
+        })
+      );
+
+      cargandoPrecarga.value = false;
+    };
+
+    // ── Transición con fade ──
+    const transicionActiva = ref(false);
+    const siguienteMedio = ref<string>('');
+    const siguienteTipoMedio = ref<TipoMedio>('imagen');
+    const siguienteMarcadores = ref<Marcador[]>([]);
+    const siguientePosicion = ref<PosicionInicial | undefined>(undefined);
+    const siguienteZoom = ref<number>(50);
+    const opacidadTransicion = ref(0);
+
+    const iniciarTransicion = (escena: Escena, duracion: number = 300) => {
+      transicionActiva.value = true;
+      siguienteMedio.value = escena.medio;
+      siguienteTipoMedio.value = escena.tipoMedio ?? 'imagen';
+      siguienteMarcadores.value = escena.marcadores ?? [];
+      siguientePosicion.value = escena.posicionInicial ?? props.posicionInicial;
+      siguienteZoom.value = escena.zoomInicial ?? props.zoomInicial;
+      opacidadTransicion.value = 0;
+
+      const paso = 16;
+      const incremento = 1 / (duracion / paso);
+
+      const intervalo = setInterval(() => {
+        opacidadTransicion.value += incremento;
+        if (opacidadTransicion.value >= 1) {
+          clearInterval(intervalo);
+          medioActual.value = siguienteMedio.value;
+          tipoMedioActual.value = siguienteTipoMedio.value;
+          marcadoresActuales.value = siguienteMarcadores.value;
+          posicionActual.value = siguientePosicion.value;
+          zoomActual.value = siguienteZoom.value;
+          transicionActiva.value = false;
+          opacidadTransicion.value = 0;
+        }
+      }, paso);
+    };
+
     // ── Inicializar según modo ──
     const inicializarDesdeEscena = (escena: Escena) => {
       medioActual.value = escena.medio;
@@ -220,6 +291,13 @@ export default defineComponent({
     watch(() => props.marcadoresIniciales, (nuevo) => {
       if (!modoEscenas.value) marcadoresActuales.value = nuevo;
     }, { deep: true });
+
+    // ── Watcher para precargar escenas ──
+    watch(() => props.escenas, (nuevasEscenas) => {
+      if (nuevasEscenas.length > 0) {
+        precargarImagenes(nuevasEscenas);
+      }
+    }, { immediate: true, deep: true });
 
     // ── Panel de información ──
     const panelVisible = ref(false);
@@ -374,14 +452,17 @@ export default defineComponent({
     // ── Gestión de escenas ──
     const cargarEscenaPorIndice = (indice: number) => {
       if (!modoEscenas.value || indice < 0 || indice >= props.escenas.length) return;
+      if (transicionActiva.value) return;
 
       const escenaAnterior = escenaActual.value ?? undefined;
-      indiceEscena.value = indice;
-      const nuevaEscena = escenaActual.value!;
+      const nuevaEscena = props.escenas[indice]!;
 
       panelVisible.value = false;
       marcadorSeleccionadoId.value = null;
-      inicializarDesdeEscena(nuevaEscena);
+
+      iniciarTransicion(nuevaEscena, props.duracionTransicion);
+
+      indiceEscena.value = indice;
 
       const payload: EventoEscenaCambiada = {
         escenaAnterior,

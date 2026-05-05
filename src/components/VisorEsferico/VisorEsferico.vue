@@ -15,7 +15,6 @@
     :posicion-inicial="normalizarPosicion(posicionActual)"
     :zoom-inicial="zoomActual"
     :configuracion-video="configuracionVideoActual"
-    :transicion-activa="transicionActiva"
     @marcador-seleccionado="manejarMarcadorSeleccionado"
     @marcador-hover="manejarMarcadorHover"
     @actualizar-posiciones="actualizarPosicionesPantalla"
@@ -214,30 +213,13 @@ export default defineComponent({
       cargandoPrecarga.value = false;
     };
 
-    // ── Transición con fade ──
-    const transicionActiva = ref(false);
-    const opacidadTransicion = ref(0);
-
-    const iniciarTransicion = (escena: Escena, duracion: number = 300) => {
-      transicionActiva.value = true;
-      opacidadTransicion.value = 0;
-
-      const paso = 16;
-      const incremento = 1 / (duracion / paso);
-
-      const intervalo = setInterval(() => {
-        opacidadTransicion.value += incremento;
-        if (opacidadTransicion.value >= 1) {
-          clearInterval(intervalo);
-          medioActual.value = escena.medio;
-          tipoMedioActual.value = escena.tipoMedio ?? 'imagen';
-          marcadoresActuales.value = escena.marcadores ?? [];
-          posicionActual.value = escena.posicionInicial ?? props.posicionInicial;
-          zoomActual.value = escena.zoomInicial ?? props.zoomInicial;
-          transicionActiva.value = false;
-          opacidadTransicion.value = 0;
-        }
-      }, paso);
+    // ── Transición con fade (delegada a Esfera360) ──
+    const iniciarTransicion = (escena: Escena) => {
+      medioActual.value = escena.medio;
+      tipoMedioActual.value = escena.tipoMedio ?? 'imagen';
+      marcadoresActuales.value = escena.marcadores ?? [];
+      posicionActual.value = escena.posicionInicial ?? props.posicionInicial;
+      zoomActual.value = escena.zoomInicial ?? props.zoomInicial;
     };
 
     // ── Inicializar según modo ──
@@ -442,7 +424,6 @@ export default defineComponent({
     // ── Gestión de escenas ──
     const cargarEscenaPorIndice = (indice: number) => {
       if (!modoEscenas.value || indice < 0 || indice >= props.escenas.length) return;
-      if (transicionActiva.value) return;
 
       const escenaAnterior = escenaActual.value ?? undefined;
       const nuevaEscena = props.escenas[indice]!;
@@ -450,7 +431,7 @@ export default defineComponent({
       panelVisible.value = false;
       marcadorSeleccionadoId.value = null;
 
-      iniciarTransicion(nuevaEscena, props.duracionTransicion);
+      iniciarTransicion(nuevaEscena);
 
       indiceEscena.value = indice;
 
@@ -595,8 +576,6 @@ export default defineComponent({
       marcadoresActuales,
       posicionActual,
       zoomActual,
-      transicionActiva,
-      opacidadTransicion,
       normalizarPosicion,
       panelVisible,
       panelTitulo,

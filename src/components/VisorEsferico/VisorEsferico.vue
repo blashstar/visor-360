@@ -2,8 +2,8 @@
 .visor-esferico(ref="visor" tabindex="0")
   Esfera360(
     ref="esferaRef"
-    :medio="transicionActiva ? siguienteMedio : medioActual"
-    :tipo-medio="transicionActiva ? siguienteTipoMedio : tipoMedioActual"
+    :medio="medioActual"
+    :tipo-medio="tipoMedioActual"
     :marcadores="marcadoresActuales"
     :color-fondo="colorFondo"
     :auto-reproducir="autoReproducir"
@@ -12,10 +12,10 @@
     :teclado-habilitado="tecladoHabilitado"
     :sensibilidad-rotacion="sensibilidadRotacion"
     :sensibilidad-zoom="sensibilidadZoom"
-    :posicion-inicial="normalizarPosicion(transicionActiva ? siguientePosicion : posicionActual)"
+    :posicion-inicial="normalizarPosicion(posicionActual)"
     :zoom-inicial="zoomActual"
     :configuracion-video="configuracionVideoActual"
-    :opacidad-transicion="opacidadTransicion"
+    :transicion-activa="transicionActiva"
     @marcador-seleccionado="manejarMarcadorSeleccionado"
     @marcador-hover="manejarMarcadorHover"
     @actualizar-posiciones="actualizarPosicionesPantalla"
@@ -216,20 +216,10 @@ export default defineComponent({
 
     // ── Transición con fade ──
     const transicionActiva = ref(false);
-    const siguienteMedio = ref<string>('');
-    const siguienteTipoMedio = ref<TipoMedio>('imagen');
-    const siguienteMarcadores = ref<Marcador[]>([]);
-    const siguientePosicion = ref<PosicionInicial | undefined>(undefined);
-    const siguienteZoom = ref<number>(50);
     const opacidadTransicion = ref(0);
 
     const iniciarTransicion = (escena: Escena, duracion: number = 300) => {
       transicionActiva.value = true;
-      siguienteMedio.value = escena.medio;
-      siguienteTipoMedio.value = escena.tipoMedio ?? 'imagen';
-      siguienteMarcadores.value = escena.marcadores ?? [];
-      siguientePosicion.value = escena.posicionInicial ?? props.posicionInicial;
-      siguienteZoom.value = escena.zoomInicial ?? props.zoomInicial;
       opacidadTransicion.value = 0;
 
       const paso = 16;
@@ -239,11 +229,11 @@ export default defineComponent({
         opacidadTransicion.value += incremento;
         if (opacidadTransicion.value >= 1) {
           clearInterval(intervalo);
-          medioActual.value = siguienteMedio.value;
-          tipoMedioActual.value = siguienteTipoMedio.value;
-          marcadoresActuales.value = siguienteMarcadores.value;
-          posicionActual.value = siguientePosicion.value;
-          zoomActual.value = siguienteZoom.value;
+          medioActual.value = escena.medio;
+          tipoMedioActual.value = escena.tipoMedio ?? 'imagen';
+          marcadoresActuales.value = escena.marcadores ?? [];
+          posicionActual.value = escena.posicionInicial ?? props.posicionInicial;
+          zoomActual.value = escena.zoomInicial ?? props.zoomInicial;
           transicionActiva.value = false;
           opacidadTransicion.value = 0;
         }
@@ -607,8 +597,6 @@ export default defineComponent({
       zoomActual,
       transicionActiva,
       opacidadTransicion,
-      siguienteMedio,
-      siguienteTipoMedio,
       normalizarPosicion,
       panelVisible,
       panelTitulo,

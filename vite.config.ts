@@ -20,15 +20,14 @@ export default defineConfig({
       formats: ['es'],
     },
     rollupOptions: {
-      external: ['vue', 'three', 'hammerjs'],
+      external: ['vue', 'three', 'hammerjs', 'gsap'],
       output: {
         globals: {
           vue: 'Vue',
           three: 'THREE',
           hammerjs: 'Hammer',
+          gsap: 'gsap',
         },
-        preserveModules: true,
-        entryFileNames: 'vue-360.js',
       },
     },
     minify: true,

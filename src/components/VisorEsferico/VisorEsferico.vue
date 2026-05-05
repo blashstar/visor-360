@@ -183,36 +183,6 @@ export default defineComponent({
     const posicionActual = ref<PosicionInicial | undefined>(props.posicionInicial);
     const zoomActual = ref<number>(props.zoomInicial);
 
-    // ── Precarga de imágenes ──
-    const precargasCargadas = ref<Set<string>>(new Set());
-    const cargandoPrecarga = ref(false);
-
-    const precargarImagenes = async (escenas: Escena[]) => {
-      if (cargandoPrecarga.value) return;
-      cargandoPrecarga.value = true;
-
-      const urls = escenas
-        .filter(e => e.tipoMedio !== 'video')
-        .map(e => e.medio)
-        .filter(url => url && !precargasCargadas.value.has(url));
-
-      await Promise.all(
-        urls.map(url => {
-          return new Promise<void>((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-              precargasCargadas.value.add(url);
-              resolve();
-            };
-            img.onerror = () => resolve();
-            img.src = url;
-          });
-        })
-      );
-
-      cargandoPrecarga.value = false;
-    };
-
     // ── Transición con fade (delegada a Esfera360) ──
     const iniciarTransicion = (escena: Escena) => {
       medioActual.value = escena.medio;
@@ -263,13 +233,6 @@ export default defineComponent({
     watch(() => props.marcadoresIniciales, (nuevo) => {
       if (!modoEscenas.value) marcadoresActuales.value = nuevo;
     }, { deep: true });
-
-    // ── Watcher para precargar escenas ──
-    watch(() => props.escenas, (nuevasEscenas) => {
-      if (nuevasEscenas.length > 0) {
-        precargarImagenes(nuevasEscenas);
-      }
-    }, { immediate: true, deep: true });
 
     // ── Panel de información ──
     const panelVisible = ref(false);

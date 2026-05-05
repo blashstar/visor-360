@@ -246,8 +246,87 @@ npm run test:unit  # Pruebas unitarias
 - **Formato:** ESM (`es`)
 - **Entry point JS:** `dist/vue-360.js`
 - **Entry point tipos:** `dist/index.d.ts`
-- **Externos:** `vue`, `three`, `hammerjs` (no se incluyen en el bundle)
-- **Tree-shaking:** Habilitado vía `preserveModules: true`
+- **Estilos:** `dist/style.css` (incluir en tu proyecto)
+- **Externos:** `vue`, `three`, `hammerjs`, `gsap` (no se incluyen en el bundle)
+- **Bundle:** Un único archivo optimizado para tree-shaking
+
+## Uso como dependencia
+
+### Instalación en tu proyecto Vue
+
+```bash
+# 1. Instalar el paquete
+npm install @blashstar/vue-360
+
+# 2. Instalar las peer dependencies requeridas
+npm install vue@^3.4.0 three@^0.160.0 hammerjs@^2.0.8 gsap@^3.15.0
+```
+
+### Importar en tu proyecto
+
+```ts
+// Importar el componente principal
+import { VisorEsferico } from '@blashstar/vue-360';
+
+// Importar tipos (opcional)
+import type { Escena, Marcador, ApiVisorEsferico } from '@blashstar/vue-360';
+
+// Importar estilos (importante para que funcione correctamente)
+import '@blashstar/vue-360/style.css';
+```
+
+### Ejemplo completo
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue';
+import { VisorEsferico, type Escena, type ApiVisorEsferico } from '@blashstar/vue-360';
+import '@blashstar/vue-360/style.css';
+
+const visorRef = ref<ApiVisorEsferico | null>(null);
+
+const escenas: Escena[] = [
+  {
+    id: 'sala',
+    titulo: 'Sala de estar',
+    medio: '/panoramas/sala.jpg',
+    tipoMedio: 'imagen',
+    posicionInicial: { yaw: 0, pitch: 0 },
+    marcadores: [
+      {
+        id: 'puerta',
+        posicion: { u: 0.8, v: 0.5 },
+        titulo: 'Entrada',
+        accion: 'cambiar_escena',
+        escenaDestino: 'entrada',
+      },
+    ],
+  },
+  {
+    id: 'entrada',
+    titulo: 'Entrada',
+    medio: '/panoramas/entrada.jpg',
+    tipoMedio: 'imagen',
+  },
+];
+</script>
+
+<template>
+  <VisorEsferico
+    ref="visorRef"
+    :escenas="escenas"
+    escena-inicial="sala"
+    :controles-tactiles="true"
+    :teclado-habilitado="true"
+  />
+</template>
+```
+
+### Notas importantes
+
+- **Incluir siempre los estilos:** `import '@blashstar/vue-360/style.css'` es obligatorio para el funcionamiento correcto.
+- **Peer dependencies:** Asegúrate de tener instalada la versión de Vue 3 compatible con tu proyecto.
+- **TypeScript:** Los tipos se incluyen automáticamente, no necesitas instalar `@types/three` ni `@types/hammerjs` si ya los tienes como devDependencies en tu proyecto.
 
 ## Licencia
 
